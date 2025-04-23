@@ -6,9 +6,11 @@ const cors = require('cors');
 dotenv.config();
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:3000', // frontend URL
+  origin: ["https://youngdiv-frontend.vercel.app"], // no trailing slash
+  methods: ["POST"], // should be 'methods' (plural) and uppercase
   credentials: true
 }));
+
 app.use(cors());
 app.use(express.json());
 
