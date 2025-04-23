@@ -11,15 +11,17 @@ app.use(cors({
   methods: ["POST", "DELETE", "GET", "PUT"],
   credentials: true
 }));
+
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/product'));
 app.use('/api/log', require('./routes/log'));
 
-// Connect to DB (run only once, not on every request)
+// Connect to MongoDB once
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB error:', err));
+  .catch(err => console.error('MongoDB connection error:', err));
 
+// ✅ Do NOT use app.listen
 module.exports = app;
