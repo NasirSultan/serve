@@ -14,14 +14,19 @@ app.use(cors({
 
 app.use(express.json());
 
+// Root route to prevent "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
+// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/product'));
 app.use('/api/log', require('./routes/log'));
 
-// Connect to MongoDB once
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => console.error('MongoDB error:', err));
 
-// ✅ Do NOT use app.listen
 module.exports = app;
