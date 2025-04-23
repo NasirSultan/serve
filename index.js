@@ -6,15 +6,19 @@ const cors = require('cors');
 dotenv.config();
 const app = express();
 
+// Middleware
 app.use(cors({
-  origin: ["https://youngdiv-frontend.vercel.app"],
+  origin: [
+    "https://youngdiv-frontend.vercel.app",
+    "http://localhost:3000"
+  ],
   methods: ["POST", "DELETE", "GET", "PUT"],
   credentials: true
 }));
 
 app.use(express.json());
 
-// Root route to prevent "Cannot GET /"
+// Root test route
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
@@ -24,9 +28,15 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/product'));
 app.use('/api/log', require('./routes/log'));
 
-// MongoDB connection
+// MongoDB connection and server startup
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB error:', err));
+  .then(() => {
+    console.log('MongoDB connected');
 
-module.exports = app;
+    // Start server on port 5000
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => console.error('MongoDB error:', err));
