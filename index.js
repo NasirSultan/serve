@@ -7,7 +7,7 @@ dotenv.config();
 const app = express();
 app.use(cors({
   origin: ["https://youngdiv-frontend.vercel.app"], // no trailing slash
-  methods: ["POST"], // should be 'methods' (plural) and uppercase
+  methods: ["POST","DELETE","GET","PUT"], // should be 'methods' (plural) and uppercase
   credentials: true
 }));
 
