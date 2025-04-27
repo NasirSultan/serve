@@ -11,7 +11,7 @@ app.use(cors({
   origin: [
     "https://youngdiv-frontend.vercel.app",
     "http://localhost:3000",
-    "https://your-frontend-domain.com"
+    "https://project.paycrock.com"
   ],
   methods: ["POST", "DELETE", "GET", "PUT"],
   credentials: true
