@@ -10,7 +10,8 @@ const app = express();
 app.use(cors({
   origin: [
     "https://youngdiv-frontend.vercel.app",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "https://your-frontend-domain.com"
   ],
   methods: ["POST", "DELETE", "GET", "PUT"],
   credentials: true
