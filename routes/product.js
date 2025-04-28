@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addProduct, deleteProduct, getMyProducts, getAllProducts, getUserProducts ,addProducadmin,getAllUsers,getUserProductsById,deleteProductadmin,getAllPendingProducts,approveProduct} = require('../controllers/productController');
+const { addProduct, deleteProduct, getMyProducts, getAllProducts, getUserProducts ,addProducadmin,getAllUsers,getUserProductsById,deleteProductadmin,getAllPendingProducts,approveProduct ,updateProductAdmin ,updateProduct} = require('../controllers/productController');
 const { auth, isAdmin } = require('../middleware/auth');
 
 router.post('/', auth, addProduct); // User can add product
@@ -17,4 +17,10 @@ router.get('/getPendingProductsByUser',auth, getAllPendingProducts);
 // router.get('/getPendingProductsByUser',auth, getAllPendingProducts); 
 
 router.post('/products/approve/:productId', auth, approveProduct);
+
+
+
+router.put('/adminupdate/:productId', auth, updateProductAdmin);
+router.put('/updateProduct/:productId', auth, updateProduct);
+
 module.exports = router;

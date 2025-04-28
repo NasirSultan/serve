@@ -347,11 +347,21 @@ exports.approveProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found or already approved" });
     }
 
-    // Mark product as approved
+    // Optional admin modifications from request body
+    const { name, price, paidPrice } = req.body;
+
+    if (name) product.name = name;
+    if (price) {
+      product.price = price;
+      product.totalAmount = price;
+    }
+    if (paidPrice) product.paidPrice = paidPrice;
+
+    // Approve the product
     product.status = "approved";
     await product.save();
 
-    // Create logs after approval
+    // Create logs: add, delete, and update (always)
     const logAdd = new Log({
       action: 'add',
       user: product.user,
@@ -374,13 +384,153 @@ exports.approveProduct = async (req, res) => {
       }
     });
 
-    await logAdd.save();
-    await logDelete.save();
+    const logUpdate = new Log({
+      action: 'update',
+      user: product.user,
+      product: product._id,
+      productSnapshot: {
+        name: product.name,
+        price: product.paidPrice,
+        totalAmount: product.totalAmount
+      }
+    });
+
+    // Save all logs
+    await Promise.all([
+      logAdd.save(),
+      logDelete.save(),
+      logUpdate.save()
+    ]);
 
     res.status(200).json({ message: "Product approved and logs created" });
 
   } catch (error) {
     console.error("Error during approval:", error);
     res.status(500).json({ message: "Failed to approve product" });
+  }
+};
+
+
+
+
+
+exports.updateProductAdmin = async (req, res) => {
+  const { productId } = req.params; // Get product ID from URL params
+  const { name, price, paidPrice, user } = req.body;
+
+  try {
+    // Optional: Ensure only admin can use this route
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied. Admins only.' });
+    }
+
+    // Ensure required fields
+    if (!user || !name || !price || !paidPrice) {
+      return res.status(400).json({ error: 'All fields (name, price, paidPrice, user) are required.' });
+    }
+
+    // Fetch the product by ID
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+
+    // Store initial paidPrice for logging purposes
+    const initialPaidPrice = product.paidPrice;
+
+    // Update the product's fields
+    product.name = name;
+    product.price = price;
+    product.paidPrice = paidPrice;
+    product.totalAmount = price; // Adjust totalAmount logic as needed
+    product.user = user;
+
+    // Save the updated product
+    await product.save();
+
+    // Create log for the "update" action
+    const logUpdate = new Log({
+      action: 'update',
+      user,
+      product: productId,
+      productSnapshot: {
+        name: product.name,
+        price: product.paidPrice,
+        totalAmount: product.totalAmount
+      }
+    });
+    await logUpdate.save();
+
+    // Log the "delete" action with the new price (not initialPaidPrice)
+    const logDelete = new Log({
+      action: 'delete',
+      user,
+      product: productId,
+      productSnapshot: {
+        name: product.name,
+        price: paidPrice, // Always use the new price for deletion
+        totalAmount: product.totalAmount
+      }
+    });
+
+    await logDelete.save();
+
+    // Log the "add" action with the new price
+    const logAdd = new Log({
+      action: 'add',
+      user,
+      product: productId,
+      productSnapshot: {
+        name: product.name,
+        price: price, // New price for addition
+        totalAmount: product.totalAmount
+      }
+    });
+
+    await logAdd.save();
+
+    // Return the updated product
+    res.status(200).json(product);
+
+  } catch (error) {
+    console.error('Error updating product by admin:', error);
+    res.status(500).json({ error: 'Server error while updating product' });
+  }
+};
+
+
+
+
+exports.updateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { name, price, paidPrice } = req.body;
+
+  if (!paidPrice) {
+    return res.status(400).json({ message: "Paid Price is required" });
+  }
+
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update product fields
+    product.name = name || product.name;
+    product.price = price || product.price;
+    product.paidPrice = paidPrice;
+    product.totalAmount = price || product.totalAmount;
+    product.status = "pending"; // Force re-approval by admin
+
+    await product.save();
+
+    res.status(201).json({
+      message: "Product updated successfully, waiting for admin approval",
+      product,
+    });
+  } catch (error) {
+    console.error("Error while updating product:", error);
+    res.status(500).json({ message: "Failed to update product" });
   }
 };
