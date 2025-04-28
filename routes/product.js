@@ -20,7 +20,7 @@ router.post('/products/approve/:productId', auth, approveProduct);
 
 
 
-router.put('/adminupdate/:productId', auth, updateProductAdmin);
+router.put('/adminupdate/:productId', auth,isAdmin, updateProductAdmin);
 router.put('/updateProduct/:productId', auth, updateProduct);
 
 module.exports = router;

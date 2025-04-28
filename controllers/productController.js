@@ -414,6 +414,45 @@ exports.approveProduct = async (req, res) => {
 
 
 
+
+
+
+
+exports.updateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { name, price, paidPrice } = req.body;
+
+  if (!paidPrice) {
+    return res.status(400).json({ message: "Paid Price is required" });
+  }
+
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update product fields
+    product.name = name || product.name;
+    product.price = price || product.price;
+    product.paidPrice = paidPrice;
+    product.totalAmount = price || product.totalAmount;
+    product.status = "pending"; // Force re-approval by admin
+
+    await product.save();
+
+    res.status(201).json({
+      message: "Product updated successfully, waiting for admin approval",
+      product,
+    });
+  } catch (error) {
+    console.error("Error while updating product:", error);
+    res.status(500).json({ message: "Failed to update product" });
+  }
+};
+
+
 exports.updateProductAdmin = async (req, res) => {
   const { productId } = req.params; // Get product ID from URL params
   const { name, price, paidPrice, user } = req.body;
@@ -495,42 +534,5 @@ exports.updateProductAdmin = async (req, res) => {
   } catch (error) {
     console.error('Error updating product by admin:', error);
     res.status(500).json({ error: 'Server error while updating product' });
-  }
-};
-
-
-
-
-exports.updateProduct = async (req, res) => {
-  const { productId } = req.params;
-  const { name, price, paidPrice } = req.body;
-
-  if (!paidPrice) {
-    return res.status(400).json({ message: "Paid Price is required" });
-  }
-
-  try {
-    const product = await Product.findById(productId);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Update product fields
-    product.name = name || product.name;
-    product.price = price || product.price;
-    product.paidPrice = paidPrice;
-    product.totalAmount = price || product.totalAmount;
-    product.status = "pending"; // Force re-approval by admin
-
-    await product.save();
-
-    res.status(201).json({
-      message: "Product updated successfully, waiting for admin approval",
-      product,
-    });
-  } catch (error) {
-    console.error("Error while updating product:", error);
-    res.status(500).json({ message: "Failed to update product" });
   }
 };
